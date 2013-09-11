@@ -27,7 +27,7 @@ require_relative 'comfortable_mexican_sofa/extensions/is_mirrored'
 require_relative 'comfortable_mexican_sofa/extensions/is_categorized'
 
 Dir.glob(File.expand_path('comfortable_mexican_sofa/tags/*.rb', File.dirname(__FILE__))).each do |path|
-  require_relative path
+  require path  # in jruby 1.7.2, require_relative doesn't work here
 end
 
 module ComfortableMexicanSofa
