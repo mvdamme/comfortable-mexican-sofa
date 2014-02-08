@@ -1,8 +1,5 @@
 class Cms::Categorization < ActiveRecord::Base
-  
-  ComfortableMexicanSofa.establish_connection(self)
-  
-  self.table_name = 'cms_categorizations'
+  include Cms::Base
   
   # -- Relationships --------------------------------------------------------
   belongs_to :category

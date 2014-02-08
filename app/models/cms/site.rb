@@ -1,8 +1,5 @@
 class Cms::Site < ActiveRecord::Base
-  
-  ComfortableMexicanSofa.establish_connection(self)
-  
-  self.table_name = 'cms_sites'
+  include Cms::Base
   
   # -- Relationships --------------------------------------------------------
   with_options :dependent => :destroy do |site|
@@ -50,7 +47,7 @@ class Cms::Site < ActiveRecord::Base
     end
     return cms_site
   end
-  
+
   # -- Instance Methods -----------------------------------------------------
   # When removing entire site, let's not destroy content from other sites
   # Since before_destroy doesn't really work, this does the trick
@@ -60,7 +57,7 @@ class Cms::Site < ActiveRecord::Base
   end
 
 protected
-  
+
   def self.real_host_from_aliases(host)
     if aliases = ComfortableMexicanSofa.config.hostname_aliases
       aliases.each do |alias_host, aliases|

@@ -1,23 +1,19 @@
 class Cms::File < ActiveRecord::Base
+  include Cms::Base
   
-  IMAGE_MIMETYPES = %w(gif jpeg pjpeg png svg+xml tiff).collect{|subtype| "image/#{subtype}"}
-  
-  ComfortableMexicanSofa.establish_connection(self)
-    
-  self.table_name = 'cms_files'
+  IMAGE_MIMETYPES = %w(gif jpeg pjpeg png tiff).collect{|subtype| "image/#{subtype}"}
   
   cms_is_categorized
   
   attr_accessor :dimensions
   
-  # -- AR Extensions --------------------------------------------------------
   has_attached_file :file, ComfortableMexicanSofa.config.upload_file_options.merge(
     # dimensions accessor needs to be set before file assignment for this to work
     :styles => lambda { |f|
       if f.respond_to?(:instance) && f.instance.respond_to?(:dimensions)
         (f.instance.dimensions.blank?? { } : { :original => f.instance.dimensions }).merge(
           :cms_thumb => '80x60#'
-        )
+        ).merge(ComfortableMexicanSofa.config.upload_file_options[:styles] || {})
       end
     }
   )
@@ -31,6 +27,7 @@ class Cms::File < ActiveRecord::Base
   validates :site_id,
     :presence   => true
   validates_attachment_presence :file
+  validates_attachment_content_type :file, :content_type => /.*/
   validates :file_file_name,
     :uniqueness => {:scope => :site_id}
   
@@ -60,11 +57,10 @@ protected
     self.position = max ? max + 1 : 0
   end
   
-  # FIX: Terrible, but no way of creating cached page content overwise
   def reload_page_cache
     return unless self.block
     p = self.block.page
-    Cms::Page.where(:id => p.id).update_all(:content => p.content(true))
+    Cms::Page.where(:id => p.id).update_all(:content => nil)
   end
   
 end

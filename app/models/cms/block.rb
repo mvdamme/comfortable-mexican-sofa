@@ -1,8 +1,5 @@
 class Cms::Block < ActiveRecord::Base
-  
-  ComfortableMexicanSofa.establish_connection(self)
-  
-  self.table_name = 'cms_blocks'
+  include Cms::Base
   
   # -- Relationships --------------------------------------------------------
   belongs_to :page

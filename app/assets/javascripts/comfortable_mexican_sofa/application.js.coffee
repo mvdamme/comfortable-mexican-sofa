@@ -1,8 +1,14 @@
 #= require jquery
 #= require jquery_ujs
 #= require jquery.ui.all
+#= require codemirror
+#= require codemirror/modes/css
+#= require codemirror/modes/htmlmixed
+#= require codemirror/modes/javascript
+#= require codemirror/modes/markdown
+#= require codemirror/modes/xml
+#= require codemirror/addons/edit/closetag
 #= require comfortable_mexican_sofa/lib/bootstrap
-#= require comfortable_mexican_sofa/lib/codemirror
 #= require comfortable_mexican_sofa/lib/wysihtml5
 #= require comfortable_mexican_sofa/lib/bootstrap-wysihtml5
 #= require comfortable_mexican_sofa/lib/bootstrap-datetimepicker
@@ -26,6 +32,7 @@ window.CMS =
     CMS.page_update_publish()
     CMS.categories()
     CMS.uploader()
+    CMS.uploaded_files()
 
 
 window.CMS.slugify = ->
@@ -45,7 +52,7 @@ window.CMS.slugify = ->
 
 
 window.CMS.wysiwyg = ->
-  $('textarea[data-rich-text]').each (i, element) ->
+  $('textarea[data-cms-rich-text]').each (i, element) ->
     $(element).wysihtml5
       html:         true
       color:        false
@@ -53,9 +60,9 @@ window.CMS.wysiwyg = ->
 
 
 window.CMS.codemirror = ->
-  $('textarea[data-cm-mode]').each (i, element) ->
+  $('textarea[data-cms-cm-mode]').each (i, element) ->
     cm = CodeMirror.fromTextArea element,
-      mode:           $(element).data('cm-mode')
+      mode:           $(element).data('cms-cm-mode')
       lineWrapping:   true
       autoCloseTags:  true
       lineNumbers:    true
@@ -74,13 +81,13 @@ window.CMS.sortable_list = ->
 
 
 window.CMS.timepicker = ->
-  $('input[type=text][data-datetime]').datetimepicker
+  $('input[type=text][data-cms-datetime]').datetimepicker
     format:     'yyyy-mm-dd hh:ii'
-    minView:    'day'
+    minView:    0
     autoclose:  true
-  $('input[type=text][data-date]').datetimepicker
+  $('input[type=text][data-cms-date]').datetimepicker
     format:     'yyyy-mm-dd'
-    minView:    'minute'
+    minView:    2
     autoclose:  true
 
 
@@ -93,7 +100,8 @@ window.CMS.page_blocks = ->
       complete: ->
         CMS.wysiwyg()
         CMS.timepicker()
-
+        CMS.codemirror()
+        CMS.reinitialize_page_blocks() if CMS.reinitialize_page_blocks?
 
 window.CMS.mirrors = ->
   $('#mirrors select').change ->
@@ -154,3 +162,7 @@ window.CMS.uploader = ->
       $('.uploaded-files').prepend(files)
       files.map ->
         $(this).fadeIn()
+
+window.CMS.uploaded_files = ->
+  $('.uploaded-files').on 'click', 'input', ->
+    $(this).select()

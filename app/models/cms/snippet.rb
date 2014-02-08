@@ -1,8 +1,5 @@
 class Cms::Snippet < ActiveRecord::Base
-  
-  ComfortableMexicanSofa.establish_connection(self)
-  
-  self.table_name = 'cms_snippets'
+  include Cms::Base
   
   cms_is_categorized
   cms_is_mirrored
@@ -36,13 +33,8 @@ protected
     self.label = self.label.blank?? self.identifier.try(:titleize) : self.label
   end
   
-  # Note: This might be slow. We have no idea where the snippet is used, so
-  # gotta reload every single page. Kinda sucks, but might be ok unless there
-  # are hundreds of pages.
   def clear_cached_page_content
-    site.pages.each do |p|
-      Cms::Page.where(:id => p.id).update_all(:content => p.content(true))
-    end
+    Cms::Page.where(:id => site.pages.pluck(:id)).update_all(:content => nil)
   end
   
   def assign_position

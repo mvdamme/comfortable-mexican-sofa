@@ -44,11 +44,25 @@ module ComfortableMexicanSofa::RenderMethods
       
       if options.is_a?(Hash) && path = options.delete(:cms_page)
         @cms_site ||= Cms::Site.find_site(request.host.downcase, request.fullpath)
+        path.gsub!(/^\/#{@cms_site.path}/, '') if @cms_site && @cms_site.path.present?
+        
         if @cms_page = @cms_site && @cms_site.pages.find_by_full_path(path)
           @cms_layout = @cms_page.layout
+          if (cms_blocks = options.delete(:cms_blocks)).present?
+            cms_blocks.each do |identifier, value|
+              content = if value.is_a?(Hash)
+                render_to_string(value.keys.first.to_sym => value[value.keys.first], :layout => false)
+              else
+                value.to_s
+              end
+              page_block = @cms_page.blocks.detect{|b| b.identifier == identifier.to_s} ||
+                @cms_page.blocks.build(:identifier => identifier.to_s)
+              page_block.content = content
+            end
+          end
           cms_app_layout = @cms_layout.try(:app_layout)
           options[:layout] ||= cms_app_layout.blank?? nil : cms_app_layout
-          options[:inline] = @cms_page.content
+          options[:inline] = @cms_page.render
           super(options, locals, &block)
         else
           raise ComfortableMexicanSofa::MissingPage.new(path)
@@ -69,7 +83,7 @@ module ComfortableMexicanSofa::RenderMethods
             cms_page.blocks.build(:identifier => identifier.to_s, :content => content)
           end
           options[:layout] ||= cms_app_layout.blank?? nil : cms_app_layout
-          options[:inline] = cms_page.content(true)
+          options[:inline] = cms_page.render
           super(options, locals, &block)
         else
           raise ComfortableMexicanSofa::MissingLayout.new(identifier)

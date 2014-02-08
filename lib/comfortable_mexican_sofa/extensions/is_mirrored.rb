@@ -48,7 +48,7 @@ module ComfortableMexicanSofa::IsMirrored
           m = site.pages.find_by_full_path(self.full_path_was || self.full_path) || site.pages.new
           m.attributes = {
             :slug       => self.slug,
-            :label      => self.slug.blank?? self.label : m.label,
+            :label      => m.label.blank?? self.label : m.label,
             :parent_id  => site.pages.find_by_full_path(self.parent.try(:full_path)).try(:id),
             :layout     => site.layouts.find_by_identifier(self.layout.try(:identifier))
           }
@@ -64,8 +64,9 @@ module ComfortableMexicanSofa::IsMirrored
         mirror.is_mirrored = true
         begin
           mirror.save!
-        rescue ActiveRecord::RecordInvalid
-          logger.detailed_error($!)
+        rescue ActiveRecord::RecordInvalid => e
+          logger.error(e.message)
+          logger.error(e.backtrace.each{|line| error line })
         end
       end
     end

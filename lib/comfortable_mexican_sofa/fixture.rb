@@ -24,7 +24,7 @@ module ComfortableMexicanSofa::Fixture
     end
     
     def get_attributes(file_path)
-      YAML.load_file(file_path)
+      YAML.load_file(file_path) || { }
     end
     
     def save_categorizations!(object, categories)
@@ -38,6 +38,13 @@ module ComfortableMexicanSofa::Fixture
           :categorized => object
         )
       end
+    end
+    
+    def read_as_haml(path)
+      content = ::File.open(path).read
+      Haml::Engine.new(content).render.rstrip
+    rescue # Bad haml, calls to helpers, who knows?
+      content
     end
     
     def import!

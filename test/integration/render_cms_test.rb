@@ -5,9 +5,10 @@ class RenderCmsIntergrationTest < ActionDispatch::IntegrationTest
   def setup
     super
     Rails.application.routes.draw do
-      get '/render-basic'   => 'render_test#render_basic'
-      get '/render-page'    => 'render_test#render_page'
-      get '/render-layout'  => 'render_test#render_layout'
+      get '/render-basic'           => 'render_test#render_basic'
+      get '/render-page'            => 'render_test#render_page'
+      get '/site-path/render-page'  => 'render_test#render_page'
+      get '/render-layout'          => 'render_test#render_layout'
     end
     cms_layouts(:default).update_columns(:content => '{{cms:page:content}}')
     cms_pages(:child).update_attributes(:blocks_attributes => [
@@ -58,6 +59,10 @@ class RenderCmsIntergrationTest < ActionDispatch::IntegrationTest
         render :cms_page => '/test-page', :status => 404
       when 'page_explicit_with_site'
         render :cms_page => '/', :cms_site => 'site-b'
+      when 'page_explicit_with_blocks'
+        render :cms_page => '/test-page', :cms_blocks => {
+          :content => 'custom page content'
+        }
       else
         raise 'Invalid or no param[:type] provided'
       end
@@ -117,6 +122,14 @@ class RenderCmsIntergrationTest < ActionDispatch::IntegrationTest
     assert_equal 'TestBlockContent', response.body
   end
   
+  def test_implicit_cms_page_with_site_path
+    cms_sites(:default).update_column(:path, 'site-path')
+    cms_pages(:child).update_attributes(:slug => 'render-page')
+    get '/site-path/render-page?type=page_implicit'
+    assert_response :success
+    assert_equal 'TestBlockContent', response.body
+  end
+  
   def test_explicit_cms_page
     page = cms_pages(:child)
     page.update_attributes(slug: 'test-page')
@@ -162,6 +175,14 @@ class RenderCmsIntergrationTest < ActionDispatch::IntegrationTest
     assert_exception_raised ComfortableMexicanSofa::MissingSite do
       get '/render-page?type=page_explicit_with_site'
     end
+  end
+  
+  def test_explicit_with_page_blocks
+    page = cms_pages(:child)
+    page.update_attributes(slug: 'test-page')
+    get '/render-page?type=page_explicit_with_blocks'
+    assert_response :success
+    assert_equal 'custom page content', response.body
   end
   
   # -- Layout Render Tests --------------------------------------------------
